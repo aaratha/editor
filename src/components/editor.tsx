@@ -145,7 +145,7 @@ export const Editor = () => {
     const htmlLines = lines.map((line, index) => {
       line = line.replace(
         /=(.*?)=/g,
-        '<span class="text-highlighted-text-color">$1</span>'
+        '<span class="text-highlight1-color">$1</span>'
       );
       line = line.replace(/\/(.*?)\//g, '<span class="italic">$1</span>');
       //line = line.replace(/\*(\S*?)\*/g, '<span class="font-bold">$1</span>')
@@ -181,15 +181,15 @@ export const Editor = () => {
             isHidden={hiddenLevels[index] || false}
           />
         ); // Convert to bullet point
-      } else if (line.trim().startsWith("#+")) {
-          line = line.slice(2).trim(); // Remove the '#+' from the line
+      } else if (line.trim().startsWith("#+title:")) {
+          line = line.slice(9).trim(); // Remove the '#+' from the line
           return (
-          <div className="text-2xl"> {/* Add a CSS class for bigger lines */}
+          <div className="text-2xl text-highlight2-color"> {/* Add a CSS class for bigger lines */}
             <Line
               key={index}
               id={index}
               level={0}
-              symbol=""
+              symbol=""
               content={line}
               isSelected={selectedLine === index}
               onClick={() => handleLineClick(index)}

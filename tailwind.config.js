@@ -9,10 +9,11 @@ module.exports = {
       'focus-color': '#ffffff1c',
       'text-color': '#ffffff85',
       'editor-text-color': '#ffffffb7',
-      'highlighted-text-color': '#68e8ffce',
+      'highlight1-color': '#68e8ffce',
       'focused-text-color': '#ffffff',
       red: '#ff00007c',
-      'menu-color': '#303030ff'
+      'menu-color': '#303030ff',
+      'highlight2-color': '#40ff80b2',
     }
   },
   plugins: []
