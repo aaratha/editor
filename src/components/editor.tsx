@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react"; // Fixed import to include useState
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"; // Fixed import to include useState
 
 interface LineProps {
   id: number;
@@ -38,7 +38,8 @@ const LineComponent: React.FC<LineProps> = ({
           {symbol}
         </div>
         <div
-          className=" flex-wrap pr-1 wrap" style={{ wordBreak: "break-word" }}
+          className=" flex-wrap pr-1 wrap"
+          style={{ wordBreak: "break-word" }}
           dangerouslySetInnerHTML={{ __html: content }}
         />
       </div>
@@ -52,7 +53,6 @@ export const Editor = () => {
   const [fileContent, setFileContent] = useState("");
   const [selectedLine, setSelectedLine] = useState<number | null>(null);
   const [lines, setLines] = useState<LineProps[]>([]); // State to store line objects including visibility
-  const [triggerRerender, setTriggerRerender] = useState(false);
   const [hiddenLevels, setHiddenLevels] = useState<{ [id: number]: boolean }>(
     {}
   );
@@ -62,8 +62,7 @@ export const Editor = () => {
   const handleLineClick = useCallback((id: number) => {
     setSelectedLine((prevId) => (prevId === id ? null : id)); // Toggle selection
     console.log("Line clicked:", id);
-    setTriggerRerender(!triggerRerender);
-  });
+  }, []);
 
   useEffect(() => {
     const handleOrgFileContent = (event, data) => {
@@ -71,7 +70,6 @@ export const Editor = () => {
     };
 
     window.ipcRenderer.on("org-file-content", handleOrgFileContent);
-
   }, []);
 
   useEffect(() => {
@@ -87,7 +85,7 @@ export const Editor = () => {
         (selectedLine !== null && event.key === "Tab") ||
         (event.keyCode === 9 && !editable)
       ) {
-        event.preventDefault()
+        event.preventDefault();
         console.log("selectedLine", selectedLine);
         const index = selectedLine;
         const selectedLineObject = lines[index];
@@ -107,7 +105,6 @@ export const Editor = () => {
               break;
             }
           }
-          setTriggerRerender((r) => !r);
           // Iterate over lines starting from the line after the clicked one
           for (let i = index + 1; i < lines.length; i++) {
             if (lines[i].props.level > selectedLevel) {
@@ -138,15 +135,13 @@ export const Editor = () => {
     editorRef,
     selectedLine,
     setHiddenLevels,
-    setTriggerRerender,
-    triggerRerender,
   ]);
   // Function to convert Org-mode content to HTML
-  const orgModeToHTML = (fileContent) => {
+  const orgModeToHTML = (fileContent,hiddenLevels) => {
     console.log("orgContent", fileContent);
     const lines = fileContent.split("\n");
-    let lastHeadingLevel = 0
-    let prevLevel = 0
+    let lastHeadingLevel = 0;
+    let prevLevel = 0;
     const htmlLines = lines.map((line, index) => {
       line = line.replace(
         /=(.*?)=/g,
@@ -156,8 +151,8 @@ export const Editor = () => {
       //line = line.replace(/\*(\S*?)\*/g, '<span class="font-bold">$1</span>')
       if (line.trim().startsWith("*")) {
         const level = (line.match(/^\*+/)[0] || [""]).length; // Count how many asterisks
-        lastHeadingLevel = level
-        prevLevel = level
+        lastHeadingLevel = level;
+        prevLevel = level;
         return (
           <Line
             key={index}
@@ -173,7 +168,7 @@ export const Editor = () => {
       } else if (line.trim().startsWith("+")) {
         const spacing = (line.match(/(^ *)\+/) || [""])[0].length;
         const level = spacing / 2 + 0.5 + lastHeadingLevel;
-        prevLevel = level
+        prevLevel = level;
         return (
           <Line
             key={index}
@@ -186,12 +181,28 @@ export const Editor = () => {
             isHidden={hiddenLevels[index] || false}
           />
         ); // Convert to bullet point
+      } else if (line.trim().startsWith("#+")) {
+          line = line.slice(2).trim(); // Remove the '#+' from the line
+          return (
+          <div className="text-2xl"> {/* Add a CSS class for bigger lines */}
+            <Line
+              key={index}
+              id={index}
+              level={0}
+              symbol=""
+              content={line}
+              isSelected={selectedLine === index}
+              onClick={() => handleLineClick(index)}
+              isHidden={hiddenLevels[index] || false}
+            />
+          </div>
+        );
       } else {
         return (
           <Line
             key={index}
             id={index}
-            level={prevLevel+1}
+            level={prevLevel + 1}
             symbol=""
             content={line}
             isSelected={selectedLine === index}
@@ -205,9 +216,14 @@ export const Editor = () => {
     return htmlLines;
   };
 
+  const processedLines = useMemo(
+    () => orgModeToHTML(fileContent, hiddenLevels),
+    [fileContent, hiddenLevels]
+  );
+
   useEffect(() => {
-    setLines(orgModeToHTML(fileContent));
-  }, [fileContent, selectedLine, triggerRerender]);
+    setLines(processedLines);
+  }, [processedLines]);
 
   return (
     <div className="editor-container pr-1 text-editor-text-color h-full w-full flex flex-col rounded-md bg-editor-color">
