@@ -21,7 +21,7 @@ const LineComponent: React.FC<LineProps> = ({
 }) => {
   console.log("Line re-rendered:", id);
   console.log("isSelected:", isSelected);
-  const padding = (level - 1) * 20; // Adjust this value as needed
+  const padding = (level - 1) * 30; // Adjust this value as needed
   return (
     <div className={` w-full flex flex-row ${isHidden ? "hidden" : ""}`}>
       <div className=" w-7 h-6 text-right text-xs text-text-color flex flex-end align-middle justify-end items-center">
@@ -29,7 +29,7 @@ const LineComponent: React.FC<LineProps> = ({
       </div>
       <div
         id="line"
-        className={`ml-3 pl-2 relative flex flex-row ${
+        className={`ml-3 min-h-[1.5rem] pl-2 relative flex flex-row ${
           isSelected ? "!bg-focus-color" : ""
         }`}
         onClick={onClick}
@@ -38,7 +38,7 @@ const LineComponent: React.FC<LineProps> = ({
           {symbol}
         </div>
         <div
-          className=" flex-wrap pr-1"
+          className=" flex-wrap pr-1 wrap" style={{ wordBreak: "break-word" }}
           dangerouslySetInnerHTML={{ __html: content }}
         />
       </div>
@@ -66,14 +66,15 @@ export const Editor = () => {
   });
 
   useEffect(() => {
-    window.ipcRenderer.receiveOrgFileContent((event, content) => {
-      setFileContent(content); // Update the state variable with the new content
-      if (editorRef.current) {
-        (editorRef.current as HTMLElement).innerHTML = orgModeToHTML(content); // Convert Org content to HTML and set as innerHTML
-        console.log("fileContent", fileContent); // Log the updated content
-      }
-    });
+    const handleOrgFileContent = (event, data) => {
+      setFileContent(data);
+    };
 
+    window.ipcRenderer.on("org-file-content", handleOrgFileContent);
+
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event) => {
       if (!editable && event.key === "i") {
         setEditable(true);
@@ -86,13 +87,10 @@ export const Editor = () => {
         (selectedLine !== null && event.key === "Tab") ||
         (event.keyCode === 9 && !editable)
       ) {
+        event.preventDefault()
         console.log("selectedLine", selectedLine);
-        console.log("Tab pressed");
-        event.preventDefault();
-        console.log("Lines:", lines);
         const index = selectedLine;
         const selectedLineObject = lines[index];
-        console.log("Selected line object:", selectedLineObject);
         const selectedLevel = selectedLineObject.props.level;
         console.log("Selected level:", selectedLevel);
         setHiddenLevels((prevHiddenLevels) => {
@@ -127,10 +125,10 @@ export const Editor = () => {
       }
     };
 
-    document.addEventListener("keyup", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("keyup", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
     lines,
@@ -147,6 +145,8 @@ export const Editor = () => {
   const orgModeToHTML = (fileContent) => {
     console.log("orgContent", fileContent);
     const lines = fileContent.split("\n");
+    let lastHeadingLevel = 0
+    let prevLevel = 0
     const htmlLines = lines.map((line, index) => {
       line = line.replace(
         /=(.*?)=/g,
@@ -155,7 +155,9 @@ export const Editor = () => {
       line = line.replace(/\/(.*?)\//g, '<span class="italic">$1</span>');
       //line = line.replace(/\*(\S*?)\*/g, '<span class="font-bold">$1</span>')
       if (line.trim().startsWith("*")) {
-        const level = line.match(/^\*+/)[0].length; // Count how many asterisks
+        const level = (line.match(/^\*+/)[0] || [""]).length; // Count how many asterisks
+        lastHeadingLevel = level
+        prevLevel = level
         return (
           <Line
             key={index}
@@ -169,19 +171,34 @@ export const Editor = () => {
           />
         );
       } else if (line.trim().startsWith("+")) {
-        const level = (line.match(/(^ *)\+/) || [""])[0].length;
+        const spacing = (line.match(/(^ *)\+/) || [""])[0].length;
+        const level = spacing / 2 + 0.5 + lastHeadingLevel;
+        prevLevel = level
         return (
           <Line
             key={index}
             id={index}
             level={level}
             symbol="•"
-            content={line.slice(level).trim()}
+            content={line.slice(spacing).trim()}
             isSelected={selectedLine === index}
             onClick={() => handleLineClick(index)} // Remove the unused comma operator
             isHidden={hiddenLevels[index] || false}
           />
         ); // Convert to bullet point
+      } else {
+        return (
+          <Line
+            key={index}
+            id={index}
+            level={prevLevel+1}
+            symbol=""
+            content={line}
+            isSelected={selectedLine === index}
+            onClick={() => handleLineClick(index)}
+            isHidden={hiddenLevels[index] || false}
+          />
+        );
       }
       return line; // Other lines as paragraphs
     });

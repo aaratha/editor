@@ -1,6 +1,6 @@
+
 * test line
 ** test line
-
 * [[*soc260 R Week 8]]
 + The state and the market; politics and economy
 + Modernization from agrarian society to industrial capitalism
