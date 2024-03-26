@@ -1,8 +1,11 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import Store from "electron-store";
 
+
+    
+    
 const store = new Store();
 
 // The built directory structure
@@ -43,12 +46,21 @@ function createWindow() {
 
   win.webContents.openDevTools({ mode: "undocked" });
 
+    win.webContents.on('zoom-changed', function(event, url){
+    event.preventDefault();
+    open(url);
+  });
+
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
     win?.hide();
     win?.show();
     win?.webContents.send("main-process-message", new Date().toLocaleString());
 
+  win?.webContents.setWindowOpenHandler((details) => {
+  shell.openExternal(details.url); // Open URL in user's browser.
+  return { action: "deny" }; // Prevent the app from opening the URL.
+})
 
   function openDirectoryDialog(event) {
     dialog
@@ -129,4 +141,9 @@ app.whenReady().then(() => {
     win?.webContents.send("selected-directory", lastOpenedDirectory);
   }
   createWindow();
+});
+
+win?.webContents.on("new-window", function(event, url) {
+  event.preventDefault();
+  shell.openExternal(url);
 });

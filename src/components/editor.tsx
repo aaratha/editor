@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"; // Fixed import to include useState
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react"; // Fixed import to include useState
 
 interface LineProps {
   id: number;
@@ -137,17 +143,39 @@ export const Editor = () => {
     setHiddenLevels,
   ]);
   // Function to convert Org-mode content to HTML
-  const orgModeToHTML = (fileContent,hiddenLevels) => {
+  const orgModeToHTML = (fileContent, hiddenLevels) => {
     console.log("orgContent", fileContent);
     const lines = fileContent.split("\n");
     let lastHeadingLevel = 0;
     let prevLevel = 0;
     const htmlLines = lines.map((line, index) => {
+      let links = [];
+      line = line.replace(
+        /\[\[((https?:\/\/|file:)?)(.*?)\]\[(.*?)\]\]/g,
+        (_, protocol, __, url, linkText) => {
+          const fullUrl = protocol ? `${protocol}${url}` : `https://${url}`;
+          links.push(
+            `<a ng-click href="${fullUrl}" target="_blank" class="underline text-highlight2-color">${linkText}</a>`
+          );
+          return `PLACEHOLDER_${links.length - 1}`;
+        }
+      );
+
+      // Apply other formatting
       line = line.replace(
         /=(.*?)=/g,
         '<span class="text-highlight1-color">$1</span>'
       );
       line = line.replace(/\/(.*?)\//g, '<span class="italic">$1</span>');
+
+      // Restore links from placeholders
+      line = line.replace(/PLACEHOLDER_(\d+)/g, (_, index) => links[index]);
+
+      // line = line.replace(
+      //   /=(.*?)=/g,
+      //   '<span class="text-highlight1-color">$1</span>'
+      // );
+      // line = line.replace(/\/(.*?)\//g, '<span class="italic">$1</span>');
       //line = line.replace(/\*(\S*?)\*/g, '<span class="font-bold">$1</span>')
       if (line.trim().startsWith("*")) {
         const level = (line.match(/^\*+/)[0] || [""]).length; // Count how many asterisks
@@ -182,9 +210,11 @@ export const Editor = () => {
           />
         ); // Convert to bullet point
       } else if (line.trim().startsWith("#+title:")) {
-          line = line.slice(9).trim(); // Remove the '#+' from the line
-          return (
-          <div className="text-2xl text-highlight2-color"> {/* Add a CSS class for bigger lines */}
+        line = line.slice(9).trim(); // Remove the '#+' from the line
+        return (
+          <div className="text-2xl text-highlight2-color">
+            {" "}
+            {/* Add a CSS class for bigger lines */}
             <Line
               key={index}
               id={index}
