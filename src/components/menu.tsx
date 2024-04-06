@@ -10,29 +10,14 @@ type MenuItemProps = {
   date: string;
   path: string;
   onClick: (path: string) => void;
+  index: number;
 };
 
-const MenuItem: React.FC<MenuItemProps> = ({ title, date, path, onClick }) => {
-  return (
-    <div className="menu-item">
-      <button className="menu-button group" onClick={() => onClick(path)}>
-        <div className="flex flex-col w-full h-full">
-          <h1>{title}</h1>
-          <p>{date}</p>
-        </div>
-        <button
-          id="delete"
-          className="opacity-0 group-hover:opacity-100 flex w-8 align-middle items-center justify-center h-full text-text-color hover:text-red transition-all text-xl"
-        >
-          <MdDeleteOutline />
-        </button>
-      </button>
-    </div>
-  );
-};
+
 
 export const Menu = (): JSX.Element => {
   const [orgFiles, setOrgFiles] = useState<string[]>([]);
+  const [viewState, toggleViewState] = useState<boolean>(true)
 
   useEffect(() => {
     window.ipcRenderer.on("selected-directory", (event, path) => {
@@ -61,13 +46,38 @@ export const Menu = (): JSX.Element => {
     window.ipcRenderer.send('get-org-file-content', path);
   };
 
+  const handleToggleClick = () => {
+    console.log("toggling menu view")
+    toggleViewState(!viewState)
+  }
+
+  const MenuItem: React.FC<MenuItemProps> = ({ title, date, path, onClick, index }) => {
+    return (
+      <div className="menu-item">
+        <button className={`menu-button group overflow-hidden ${viewState === true ? 'w-full' : 'w-[2em] !pl-[0.72em]'}`} onClick={() => onClick(path)}>
+          <div className="flex w-8 pr-3 align-middle items-center justify-center h-full text-text-color opacity-50 group-hover:text-focused-text-color transition-all text-md ">{index}</div>
+          <div className={`flex flex-col w-full h-full transition-all `}>
+            <h1>{title}</h1>
+            <p>{date}</p>
+          </div>
+          <button
+            id="delete"
+            className="opacity-0 group-hover:opacity-100 flex w-8 align-middle items-center justify-center h-full text-text-color hover:text-red transition-all text-xl"
+          >
+            <MdDeleteOutline />
+          </button>
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div
-      className={`flex flex-col h-full w-[15rem] pl-[6px] pb-[6px] ${
+      className={`flex flex-col h-full transition-all ${viewState === true ? "w-[15em] pl-[6px]" : "w-[3.05rem] pl-[6px] pb-[0px]"}  ${
         isMac ? "pt-[2rem]" : "pt-[0rem]"
       }`}
     >
-      <div className="flex flex-row w-full h-[2rem] pl-1 pr-1 justify-between mb-2">
+      <div className="flex flex-row flex-wrap-reverse w-full pl-1 pr-1 justify-between mb-1">
         <button
           onClick={() => window.ipcRenderer.send("open-directory-dialog")}
           className="tray-item"
@@ -80,7 +90,7 @@ export const Menu = (): JSX.Element => {
         <button className="tray-item" onClick={handleSettingsClick}>
           <IoSettingsSharp />
         </button>
-        <button className="tray-item">
+        <button className="tray-item " onClick={handleToggleClick}>
           <MdOutlineKeyboardDoubleArrowLeft />
         </button>
       </div>
@@ -91,6 +101,7 @@ export const Menu = (): JSX.Element => {
           date={new Date().toLocaleDateString()}
           path={file.path}
           onClick={() => handleMenuItemClick(file.path)}
+          index={index+1}
         />
       ))}
     </div>

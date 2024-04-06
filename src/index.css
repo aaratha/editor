@@ -37,6 +37,7 @@ body {
   width: 100%;
   text-align: left;
   padding: 10px;
+  padding-left: 5px;
   transition: all 0.05s ease-in-out;
   display: flex;
   flex-direction: row;
@@ -63,7 +64,7 @@ body {
   transition: all 0.05s ease-in-out;
   border: 1px solid theme(colors.border-color);
   justify-content: center;
-  padding: auto;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   font-size: 1.2rem;
