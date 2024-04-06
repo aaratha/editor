@@ -43,7 +43,7 @@ function createWindow() {
       titleBarStyle: "hidden",
     }),
   });
-
+  win.loadURL('../index.html')
   win.webContents.openDevTools({ mode: "undocked" });
 
     win.webContents.on('zoom-changed', function(event, url){
@@ -111,12 +111,12 @@ function createWindow() {
   });
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
+    win?.loadURL(VITE_DEV_SERVER_URL);
   } else {
     // win.loadFile('dist/index.html')
-    win.loadFile(path.join(process.env.DIST, "index.html"));
+    win?.loadFile(path.join(process.env.DIST, "index.html"));
   }
-}
+})}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
