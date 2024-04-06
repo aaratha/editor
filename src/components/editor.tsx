@@ -182,6 +182,7 @@ export const Editor = () => {
         lastHeadingLevel = level;
         prevLevel = level;
         return (
+          <div className=" font-bold">
           <Line
             key={index}
             id={index}
@@ -192,6 +193,7 @@ export const Editor = () => {
             onClick={() => handleLineClick(index)}
             isHidden={hiddenLevels[index] || false}
           />
+          </div>
         );
       } else if (line.trim().startsWith("+")) {
         const spacing = (line.match(/(^ *)\+/) || [""])[0].length;
@@ -219,7 +221,7 @@ export const Editor = () => {
               key={index}
               id={index}
               level={0}
-              symbol=""
+              symbol="|"
               content={line}
               isSelected={selectedLine === index}
               onClick={() => handleLineClick(index)}
