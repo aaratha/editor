@@ -107,22 +107,15 @@ export const Editor = () => {
                 hideLines = true;
                 break;
               }
-            } else {
-              break;
             }
           }
-          // Iterate over lines starting from the line after the clicked one
           for (let i = index + 1; i < lines.length; i++) {
             if (lines[i].props.level > selectedLevel) {
-              // If the line is a child (has a greater level), toggle its visibility
               newHiddenLevels[i] = hideLines;
             } else {
-              // Once we reach a line that is not a child, stop the loop
               break;
             }
           }
-
-          console.log("Updated hiddenLevels:", newHiddenLevels);
           return newHiddenLevels;
         });
       }

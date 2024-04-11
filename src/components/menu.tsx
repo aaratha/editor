@@ -31,6 +31,7 @@ export const Menu = (): JSX.Element => {
   }, []);
 
   const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const [isRotated, setIsRotated] = useState(false);
 
   const handleSettingsClick = () => {
     const settings = document.querySelector(".settings");
@@ -49,6 +50,7 @@ export const Menu = (): JSX.Element => {
   const handleToggleClick = () => {
     console.log("toggling menu view")
     toggleViewState(!viewState)
+    setIsRotated(!isRotated);
   }
 
   const MenuItem: React.FC<MenuItemProps> = ({ title, date, path, onClick, index }) => {
@@ -90,7 +92,7 @@ export const Menu = (): JSX.Element => {
         <button className="tray-item" onClick={handleSettingsClick}>
           <IoSettingsSharp />
         </button>
-        <button className="tray-item " onClick={handleToggleClick}>
+        <button id='menuToggle' className={`tray-item ${isRotated ? 'rotate-180' : ''} transition-all`} onClick={handleToggleClick}>
           <MdOutlineKeyboardDoubleArrowLeft />
         </button>
       </div>
